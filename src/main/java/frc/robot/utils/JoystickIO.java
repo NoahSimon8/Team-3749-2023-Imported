@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Robot;
-import frc.robot.commands.swerve.AutoBalancingPID;
 import frc.robot.commands.swerve.SwerveTeleopCommand;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.utils.Constants.Arm.ArmSetpoints;
@@ -76,14 +75,9 @@ public class JoystickIO {
      */
     public void pilotAndOperatorBindings() {
 
-        pilot.yWhileHeld(() -> swerve.toggleSpeed());
 
-        pilot.rightTriggerWhileHeld(new AutoBalancingPID(swerve, 0));
         // swerve button bindings
-        pilot.startWhileHeld(Commands.runOnce(() -> {
-            swerve.setFlipGyro(false);
-            swerve.resetGyro();
-        }, swerve));
+
 
         // swerve rotation cardinals
         pilot.povUp().whileTrue(Commands.run(() -> swerve.turnToRotation(0)));

@@ -51,48 +51,29 @@ public class Swerve extends SubsystemBase {
     private final SlewRateLimiter turningLimiter = new SlewRateLimiter(
             Constants.DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
 
-    private boolean flipGyro = true;
-
     public Swerve() {
 
-        gyroData = new GyroData();
+        if (Constants.isSim) {
+            gyro = new GyroIO() {
+            };
 
-        for (int i = 0; i < 4; i++){
+            gyroData = new GyroData();
+            for (int i = 0; i < 4; i++) {
+                modules[i] = new SwerveModuleSim();
+                moduleData[i] = new ModuleData();
+            }
+        } else if (!Constants.isSim) {
 
-            modules[i] = new SwerveModuleSim();
-            moduleData[i] = new ModuleData();
         }
-    
+
         swerveDrivePoseEstimator = new SwerveDrivePoseEstimator(Constants.DriveConstants.kDriveKinematics,
                 new Rotation2d(0),
-                new SwerveModulePosition[] { moduleData[0].position,  moduleData[1].position,  moduleData[2].position,
-                    moduleData[3].position },
+                new SwerveModulePosition[] { moduleData[0].position, moduleData[1].position, moduleData[2].position,
+                        moduleData[3].position },
                 new Pose2d(new Translation2d(0, 0), new Rotation2d(0, 0)));
 
-        // swerveDrivePoseEstimator.setVisionMeasurementStdDevs(null);
-        
         turnController.enableContinuousInput(-180, 180);
-        
 
-    }
-
-    public void drive(double xSpeed, double ySpeed, double thetaSpeed) {
-
-        ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                0, xSpeed, 0, getRotation2d());
-        SwerveModuleState[] moduleStates = Constants.DriveConstants.kDriveKinematics
-                .toSwerveModuleStates(chassisSpeeds);
-
-        setModuleStates(moduleStates);
-    }
-
-    public void stop() {
-
-        drive(0, 0, 0);
-    }
-
-    public void setFlipGyro(boolean bool) {
-        flipGyro = bool;
     }
 
     public void resetGyro() {
@@ -100,89 +81,53 @@ public class Swerve extends SubsystemBase {
         System.out.println("RESET");
     }
 
-    public double getAutoHeading() {
-
-        return new Rotation2d(Math.toRadians(gyroData.yaw))
-                .rotateBy(new Rotation2d(Math.toRadians(180))).getDegrees();
-    }
-
-    public double getHeading() {
-        return gyroData.yaw;
-    }
-
-    public Rotation2d getAutoRotation2d() {
-
-        return Rotation2d.fromDegrees(-getAutoHeading());
-
-    }
-
     public Rotation2d getRotation2d() {
-        return Rotation2d.fromDegrees(-getHeading());
+        return new Rotation2d(gyroData.yaw / 180 * Math.PI);
     }
 
     public Pose2d getPose() {
-        if (DriverStation.getAlliance().isPresent()){
-            Rotation2d rotation = DriverStation.getAlliance().get() == Alliance.Blue
-                    ? (flipGyro ? getAutoRotation2d() : getRotation2d())
-                    : getRotation2d();
-            Pose2d estimatedPose = swerveDrivePoseEstimator.getEstimatedPosition();
 
-            return new Pose2d(estimatedPose.getTranslation(), rotation);
-        }
-        return new Pose2d();
+        Pose2d estimatedPose = swerveDrivePoseEstimator.getEstimatedPosition();
+
+        return new Pose2d(estimatedPose.getTranslation(), getRotation2d());
     }
 
-    public boolean getFlipGyro() {
-        return flipGyro;
+    public SwerveDrivePoseEstimator getPoseEstimator(){
+        return swerveDrivePoseEstimator;
     }
-
+ 
     public void resetOdometry(Pose2d pose) {
-        Rotation2d rotation = DriverStation.getAlliance().get() == Alliance.Blue
-                ? (flipGyro ? getAutoRotation2d() : getRotation2d())
-                : getRotation2d();
 
-        swerveDrivePoseEstimator.resetPosition(rotation,
-                new SwerveModulePosition[] {  moduleData[0].position,  moduleData[1].position,  moduleData[2].position,
-                    moduleData[3].position },
+
+        swerveDrivePoseEstimator.resetPosition(getRotation2d(),
+                new SwerveModulePosition[] { moduleData[0].position, moduleData[1].position, moduleData[2].position,
+                        moduleData[3].position },
                 pose);
     }
 
     public void updateOdometry() {
-        if (DriverStation.getAlliance().isPresent()){
-            System.out.println("ALLIANCE");
-            Rotation2d rotation = DriverStation.getAlliance().get() == Alliance.Blue
-                    ? (flipGyro ? getAutoRotation2d() : getRotation2d())
-                    : getRotation2d();
-                    
-            swerveDrivePoseEstimator.update(rotation,
-                    new SwerveModulePosition[] {  moduleData[0].position,  moduleData[1].position,  moduleData[2].position,
+
+        swerveDrivePoseEstimator.update(getRotation2d(),
+                new SwerveModulePosition[] { moduleData[0].position, moduleData[1].position, moduleData[2].position,
                         moduleData[3].position });
-        }
-            System.out.println("NO ALLIANCE");
 
     }
 
-    public SwerveDrivePoseEstimator getPoseEstimator() {
-        return swerveDrivePoseEstimator;
-    }
 
     public void stopModules() {
-        for (SwerveModuleIO module : modules){
+        for (SwerveModuleIO module : modules) {
             module.stop();
         }
     }
-    public void setModuleStates(SwerveModuleState[] desiredStates) {
-        if (flipGyro && !DriverStation.isAutonomous()) {
-            for (int i = 0; i < 4; i++) {
-                desiredStates[i].speedMetersPerSecond = -desiredStates[i].speedMetersPerSecond;
 
-            }
-        }
+    public void setModuleStates(SwerveModuleState[] desiredStates) {
+
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        for (int i = 0; i<4; i++){
-            modules[i].setDesiredState(desiredStates[i]);
+        for (int i = 0; i < 4; i++) {
+            modules[i].setDesiredState(desiredStates[i], moduleData[i]);
         }
     }
+
     /***
      * 
      * @param angle the angle to move at, in degrees, -180 to 180
@@ -212,7 +157,7 @@ public class Swerve extends SubsystemBase {
      */
     public void turnToRotation(double angle) {
         // negative so that we move towards the target, not away
-        double turning_speed = -turnController.calculate(getHeading(), angle);
+        double turning_speed = -turnController.calculate(getRotation2d().getDegrees(), angle);
         turning_speed = turningLimiter.calculate(turning_speed);
         // turning_speed = Math.abs(turning_speed) * Math.signum(getHeading());
 
@@ -232,49 +177,30 @@ public class Swerve extends SubsystemBase {
         return gyroData.pitch;
     }
 
-    public PIDController getTurnController() {
-        return turnController;
-    }
-
-    public SlewRateLimiter getTurnLimiter() {
-        return turningLimiter;
-    }
-
-    public void toggleSpeed() {
-
-        if (Constants.DriveConstants.kTeleDriveMaxSpeedMetersPerSecond == 5) {
-            Constants.DriveConstants.kTeleDriveMaxSpeedMetersPerSecond = 3;
-            Constants.DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond = 3;
-        } else {
-            Constants.DriveConstants.kTeleDriveMaxSpeedMetersPerSecond = 5;
-            Constants.DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond = 5;
-        }
-
-    }
 
     @Override
     public void periodic() {
         updateOdometry();
 
-        for (int i = 0; i < 4; i++){
-        
+        for (int i = 0; i < 4; i++) {
             modules[i].updateData(moduleData[i]);
         }
 
-        SmartDashboard.putNumberArray("Odometry",
-        new double[] { getPose().getX(), getPose().getY(), getPose().getRotation().getDegrees() });
-        SmartDashboard.putNumber("FR Drive", moduleData[0].driveVelocityMPerSec);
 
-        double[] realStates = { 
-            moduleData[0].turnAbsolutePositionRad,
-            moduleData[0].driveVelocityMPerSec,
-            moduleData[1].turnAbsolutePositionRad,
-            moduleData[1].driveVelocityMPerSec,
-            moduleData[2].turnAbsolutePositionRad,
-            moduleData[2].driveVelocityMPerSec,
-            moduleData[3].turnAbsolutePositionRad,
-            moduleData[3].driveVelocityMPerSec};
+        SmartDashboard.putNumberArray("Odometry",
+                new double[] { getPose().getX(), getPose().getY(), getPose().getRotation().getDegrees() });
         
+        double[] realStates = {
+                moduleData[0].turnAbsolutePositionRad / Math.PI * 180,
+                moduleData[0].driveVelocityMPerSec,
+                moduleData[1].turnAbsolutePositionRad / Math.PI * 180,
+                moduleData[1].driveVelocityMPerSec,
+                moduleData[2].turnAbsolutePositionRad / Math.PI * 180,
+                moduleData[2].driveVelocityMPerSec,
+                moduleData[3].turnAbsolutePositionRad / Math.PI * 180,
+                moduleData[3].driveVelocityMPerSec };
+
+
         double[] theoreticalStates = {
                 moduleData[0].theoreticalState.angle.getDegrees(),
                 moduleData[0].theoreticalState.speedMetersPerSecond,
@@ -284,10 +210,11 @@ public class Swerve extends SubsystemBase {
                 moduleData[2].theoreticalState.speedMetersPerSecond,
                 moduleData[3].theoreticalState.angle.getDegrees(),
                 moduleData[3].theoreticalState.speedMetersPerSecond,
-            };
+        };
+
         SmartDashboard.putNumberArray("Theoretical States", theoreticalStates);
         SmartDashboard.putNumberArray("Real Staets", realStates);
-        SmartDashboard.putNumber("Yaw", getHeading());
+        SmartDashboard.putNumber("Yaw", getRotation2d().getDegrees());
         SmartDashboard.putNumber("Pitch", getVerticalTilt());
         SmartDashboard.putNumber("Robot Pose X", getPose().getX());
         SmartDashboard.putNumber("Robot Pose Y", getPose().getY());

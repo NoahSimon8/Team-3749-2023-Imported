@@ -16,6 +16,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class Constants {
+
+    public static final Boolean isSim = true;
+
+
     /***
      * 
      * @param margin how close the values need to be to return true. Use a positive
@@ -56,7 +60,7 @@ public class Constants {
         SIM
       }
     
-    public static final RobotType ROBOT_TYPE = RobotType.SIM;
+    public static final RobotType ROBOT_TYPE = RobotType.VIPER;
 
     public static final class Sim{
         public static final double loopPeriodSec = 0.02;
@@ -163,7 +167,18 @@ public class Constants {
         public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
         public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60;
         public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60;
-        public static final double kPTurning = 0.5;
+        public static final double kPTurningReal = 2.25;
+        public static final double kPDrivingReal = 0.0;
+        public static final double kVDrivingReal = 1.5;
+        public static final double kSDrivingReal = 0.0;
+
+        public static final double kPTurningSim = 4;
+        public static final double kVDrivingSim = 2.5;
+        public static final double kSDrivingSim = 0.0;
+        public static final double kPDrivingSim = 0.0;
+
+
+  
     }
 
     public static final class DriveConstants {
