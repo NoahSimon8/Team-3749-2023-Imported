@@ -76,6 +76,26 @@ public class Swerve extends SubsystemBase {
 
     }
 
+    public void setChassisSpeeds(ChassisSpeeds chassisSpeeds){
+
+               // Relative to robot
+               // chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
+       
+               // 5. Convert chassis speeds to individual module states
+               SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
+       
+               // 6. Output each module states to wheels
+               setModuleStates(moduleStates);
+    }
+
+    public ChassisSpeeds getChassisSpeeds(){
+        SwerveModuleState[] states = new SwerveModuleState[4];
+        for (int i = 0; i<4; i++){
+            states[i] = new SwerveModuleState(moduleData[i].driveVelocityMPerSec, new Rotation2d( moduleData[i].turnAbsolutePositionRad));
+        }
+        return DriveConstants.kDriveKinematics.toChassisSpeeds(states);
+    }
+
     public void resetGyro() {
         gyro.resetGyro();
         System.out.println("RESET");

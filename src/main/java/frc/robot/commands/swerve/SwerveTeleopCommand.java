@@ -58,25 +58,18 @@ public class SwerveTeleopCommand extends Command {
         // 3. Make the driving smoother
         xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
         ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+        
         turningSpeed = turningLimiter.calculate(turningSpeed)
                 * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
-
-        // 4. Construct desired chassis speeds
-        ChassisSpeeds chassisSpeeds;
+               // 4. Construct desired chassis speeds
+               ChassisSpeeds chassisSpeeds;
     
-        // Relative to field
-
-        chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                xSpeed, ySpeed, turningSpeed, swerve.getRotation2d());
-
-        // Relative to robot
-        // chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-
-        // 5. Convert chassis speeds to individual module states
-        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
-
-        // 6. Output each module states to wheels
-        swerve.setModuleStates(moduleStates);
+               // Relative to field
+       
+               chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                       xSpeed, ySpeed, turningSpeed, swerve.getRotation2d());
+       
+        swerve.setChassisSpeeds(chassisSpeeds);
     }
 
     @Override
