@@ -77,10 +77,6 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setChassisSpeeds(ChassisSpeeds chassisSpeeds){
-
-               // Relative to robot
-               // chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-       
                // 5. Convert chassis speeds to individual module states
                SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
        

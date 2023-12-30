@@ -61,14 +61,12 @@ public class SwerveTeleopCommand extends Command {
         
         turningSpeed = turningLimiter.calculate(turningSpeed)
                 * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
-               // 4. Construct desired chassis speeds
-               ChassisSpeeds chassisSpeeds;
-    
-               // Relative to field
-       
-               chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                       xSpeed, ySpeed, turningSpeed, swerve.getRotation2d());
-       
+        // 4. Construct desired chassis speeds
+        ChassisSpeeds chassisSpeeds;
+        // Relative to field
+        chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                xSpeed, ySpeed, turningSpeed, swerve.getRotation2d());
+
         swerve.setChassisSpeeds(chassisSpeeds);
     }
 

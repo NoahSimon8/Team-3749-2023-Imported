@@ -53,7 +53,9 @@ public class PathPlannerFollow {
                         new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
                             new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                             new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-                            3, // Max module speed, in m/s
+                            5, // Max module speed, in m/s
+
+
                             Math.sqrt(2*(DriveConstants.kTrackWidth * DriveConstants.kTrackWidth)), // Drive base radius in meters. Distance from robot center to furthest module.
                             new ReplanningConfig() // Default path replanning config. See the API for the options here
                         ),
@@ -72,7 +74,11 @@ public class PathPlannerFollow {
         
         return followTrajectoryCommand(path, true, swerve);
     }
+    public  static Command newPath(Swerve swerve){
+        PathPlannerPath path = PathPlannerPath.fromPathFile("Example Path");
         
+        return followTrajectoryCommand(path, true, swerve);
+    }
 
 
 }

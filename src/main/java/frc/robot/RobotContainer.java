@@ -68,7 +68,7 @@ public class RobotContainer {
      * @return Autonomous Command
      */
     public Command getAutonomousCommand() {
-        return PathPlannerFollow.examplePath(Robot.swerve);
+        return PathPlannerFollow.newPath(Robot.swerve);
         // return AutoCommands.getPieceAlign();
         // return AutoConstants.autoChooser.getSelected();
     }
